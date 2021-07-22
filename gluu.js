@@ -15,8 +15,8 @@ var config = {
 // function to get values from config file
 
 function readConfigFile() {
-  if (fs.existsSync('./glue.config.json')) {
-    fs.readFile('./glue.config.json', "utf8", (err, data) => {
+  if (fs.existsSync('./gluu.config.json')) {
+    fs.readFile('./gluu.config.json', "utf8", (err, data) => {
       if (err) {
         console.log(err);
         return err;
@@ -95,8 +95,8 @@ function filterPartialHTML(rawHtml) {
 }
 
 function createConfigFile() {
-  if (!fs.existsSync('./glue.config.json')) {
-    saveFile(JSON.stringify(config), "glue.config.json")
+  if (!fs.existsSync('./gluu.config.json')) {
+    saveFile(JSON.stringify(config), "gluu.config.json")
   }
 }
 
