@@ -2,14 +2,15 @@
 var HTMLParser = require("node-html-parser");
 var fs = require("fs");
 
+// variable initialization
+const [, , ...args] = process.argv;
+
 var config = {
   partialDirectory: "partials",
   syntax: "partial",
   output: "dist",
   entry: "index.html"
 }
-// variable initialization
-const [, , ...args] = process.argv;
 
 // function to get values from config file
 
@@ -38,9 +39,9 @@ function initialize() {
   });
 }
 
-function saveFile(data, fileName) {
+function saveFile(data, fileName,) {
   initialize();
-  var stream = fs.createWriteStream("./" + config.output + "/" + fileName);
+  var stream = fs.createWriteStream("./" + fileName);
   stream.once("open", function (fd) {
     var html = "" + data;
     stream.end(html);
@@ -48,31 +49,36 @@ function saveFile(data, fileName) {
 }
 
 function processFile(fileName) {
-  fs.readFile(fileName, "utf8", function (err, data) {
-    if (err) {
-      return console.log(err);
-    }
-    const root = HTMLParser.parse(data);
-    const partials = root.querySelectorAll(config.syntax);
-    partials.forEach((partial) => {
-      const partialName = partial.getAttribute("name");
-      const newHTML = readPartial(
-        "./" + config.partialDirectory + "/" + partialName
-      );
-      const attrs = partial.rawAttributes;
-      const keys = Object.keys(attrs);
-      Promise.resolve(newHTML).then((value) => {
-        var filteredData = "" + filterPartialHTML(value);
-        keys.forEach((key, index) => {
-          var reg = new RegExp("\\{\\b" + key + "\\b\\}");
-          filteredData = filteredData.replace(reg, attrs[key]);
+  if (fileName == "") return console.log("Entry point file is required.");
+  if (fs.existsSync(fileName)) {
+    fs.readFile(fileName, "utf8", function (err, data) {
+      if (err) {
+        return console.log(err);
+      }
+      const root = HTMLParser.parse(data);
+      const partials = root.querySelectorAll(config.syntax);
+      partials.forEach((partial) => {
+        const partialName = partial.getAttribute("name");
+        const newHTML = readPartial(
+          "./" + config.partialDirectory + "/" + partialName
+        );
+        const attrs = partial.rawAttributes;
+        const keys = Object.keys(attrs);
+        Promise.resolve(newHTML).then((value) => {
+          var filteredData = "" + filterPartialHTML(value);
+          keys.forEach((key, index) => {
+            var reg = new RegExp("\\{\\b" + key + "\\b\\}");
+            filteredData = filteredData.replace(reg, attrs[key]);
+          });
+          partial.insertAdjacentHTML("afterend", filteredData);
+          partial.remove();
         });
-        partial.insertAdjacentHTML("afterend", filteredData);
-        partial.remove();
+        saveFile(root, config.output + "/" + fileName);
       });
-      saveFile(root, fileName);
     });
-  });
+  } else {
+    console.log(`Entry file not found. Project must have a \"${config.entry}\" file`);
+  }
 }
 
 async function readPartial(partialName) {
@@ -88,5 +94,15 @@ function filterPartialHTML(rawHtml) {
   return htmlTree;
 }
 
-// execution
-readConfigFile()
+function createConfigFile() {
+  if (!fs.existsSync('./glue.config.json')) {
+    saveFile(JSON.stringify(config), "glue.config.json")
+  }
+}
+
+if (args.includes('init')) {
+  createConfigFile()
+} else {
+  // execution
+  readConfigFile()
+}
