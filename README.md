@@ -1,4 +1,4 @@
-# Gluu - A lightweight HTML Framework
+# Gluu - Lightweight HTML Framework
 
 **What is Gluu?**
 Gluu is a lightweight html compiler which help in maintaining large html/css/js projects by using partials.
@@ -50,3 +50,20 @@ to use the parameter in partial file simply use **{parameter}**
 <!-- demo.html -->
 <h1>{heading}</h1>
 ```
+
+There are times when you need to add some style/script dependencies to partial but do not want them to be included in the complied file. In most of the cases its because the main file already has the code.
+to prevent the duplicate code added to the complied html, use ignore tag.
+```html
+<!-- any partial can have it -->
+<ignore>
+<!-- your script/style here -->
+</ignore>
+```
+
+## Future Goals
+ - [ ] add content to head/footer from the partial
+
+
+### For feedback and query, please write to admin@iammukesh.com
+
+### I also make youtube videos :) https://youtube.com/askmj
