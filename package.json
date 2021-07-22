@@ -1,7 +1,7 @@
 {
   "name": "gluu",
   "version": "0.0.5",
-  "description": "gluu is a tool to write clean and structured html code",
+  "description": "gluu is a lightweight HTML Framework to write clean and structured html code",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

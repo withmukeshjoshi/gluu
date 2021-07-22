@@ -98,10 +98,18 @@ function createConfigFile() {
   if (!fs.existsSync('./gluu.config.json')) {
     saveFile(JSON.stringify(config), "gluu.config.json")
   }
+  if (!fs.existsSync(config.partialDirectory)) {
+    fs.mkdir("./" + config.partialDirectory + "/", (err) => {
+      if (err) {
+        return console.error(err);
+      }
+    });
+  }
 }
 
 if (args.includes('init')) {
   createConfigFile()
+  initialize()
 } else {
   // execution
   readConfigFile()
