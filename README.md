@@ -2,9 +2,10 @@
 
 **What is Gluu?**
 Gluu is a lightweight html compiler which help in maintaining large html/css/js projects by using partials.
+Gluu help writing clean and maintainable code. Sometime you dont want to use heavy frameworks but need features like partials and two way communication.
 
 **What is a partial?**
-Partial is a reusable code which you can use throughout the project. for example header, footer, sidebar can be shared between all pages.
+Partial is a reusable code which you can use throughout the project. for example header, footer, sidebar can be shared between all pages. It will make the code more readable and easy to maintain.
 
 **Benefits of Partials?**
 Partial allows you writing clean, fast and maintainable code.
@@ -62,6 +63,7 @@ to prevent the duplicate code added to the complied html, use ignore tag.
 
 ## Future Goals
  - [ ] add content to head/footer from the partial
+ - [ ] pass content to partial
 
 
 ### For feedback and query, please write to admin@iammukesh.com
