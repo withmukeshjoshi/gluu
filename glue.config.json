@@ -1,0 +1,6 @@
+{
+    "partialDirectory": "partials",
+    "syntax": "partial",
+    "output": "dist",
+    "entry": "index.html"
+}
