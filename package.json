@@ -1,0 +1,18 @@
+{
+  "name": "glue",
+  "version": "0.0.1",
+  "description": "Glue is a tool to ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "htmlify": "./cli.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-html-parser": "^4.1.0"
+  }
+}
