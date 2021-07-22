@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 var HTMLParser = require("node-html-parser");
 var fs = require("fs");
-const path = require("path");
 
 function initialize() {
-  if (fs.existsSync(path.join(__dirname, "dist"))) {
+  if (fs.existsSync("./dist/")) {
     console.log("Deleting old dist directory");
-    fs.rmdirSync(path.join(__dirname, "dist"), { recursive: true });
+    fs.rmdirSync("./dist/", { recursive: true });
   }
-  fs.mkdir(path.join(__dirname, "dist"), (err) => {
+  fs.mkdir("./dist/", (err) => {
     if (err) {
       return console.error(err);
     }
@@ -17,7 +16,7 @@ function initialize() {
 }
 function saveFile(data, fileName) {
   initialize();
-  var stream = fs.createWriteStream("dist/" + fileName);
+  var stream = fs.createWriteStream("./dist/" + fileName);
   stream.once("open", function (fd) {
     var html = "" + data;
     stream.end(html);
@@ -34,7 +33,7 @@ function processFile(fileName) {
     partials.forEach((partial) => {
       const partialName = partial.getAttribute("name");
       const newHTML = readPartial(
-        path.join(__dirname, "partials/") + partialName
+        "./partials/" + partialName
       );
       const attrs = partial.rawAttributes;
       const keys = Object.keys(attrs);
@@ -65,5 +64,4 @@ function filterPartialHTML(rawHtml) {
 }
 
 // execution
-
 processFile("./index.html");

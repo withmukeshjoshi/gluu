@@ -1,13 +1,13 @@
 {
-  "name": "glue",
-  "version": "0.0.1",
-  "description": "Glue is a tool to ",
+  "name": "gluu",
+  "version": "0.0.3",
+  "description": "gluu is a tool to write clean and structured html code",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "htmlify": "./cli.js"
+    "gluu": "./gluu.js"
   },
   "keywords": [],
   "author": "",

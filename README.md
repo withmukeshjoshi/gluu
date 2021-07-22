@@ -1,2 +1,2 @@
-# glue
-Glue allow you to write clean, structured and maintainable html projects 
+# Gluu
+Gluu allow you to write clean, structured and maintainable html projects 
