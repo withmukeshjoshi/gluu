@@ -22,6 +22,12 @@ Gluu is one of the simple HTML framework that you will use.
 npm install gluu
 ```
 
+----- YARN ------
+
+```javascript
+yarn add gluu
+```
+
 create a gluu config file by running below command:
 
 ```javascript
@@ -29,6 +35,18 @@ gluu init
 ```
 
 you can manually create a **gluu.config.json** file and a folder named **partials** at the project root.
+default **_glue.config.json_**
+
+```json
+{
+  "partialDirectory": "partials",
+  "syntax": "partial",
+  "output": "dist",
+  "ext": ".html",
+  "src": "src",
+  "pretty:true
+}
+```
 
 ```html
 <!DOCTYPE html>
@@ -69,6 +87,11 @@ to prevent the duplicate code added to the complied html, use ignore tag.
   <!-- your script/style here -->
 </ignore>
 ```
+
+### CLI Paramters:
+
+- "-l" to show logs
+- "--pretty=false" to disable prettier
 
 ## Goals
 
