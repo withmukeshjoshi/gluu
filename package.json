@@ -14,5 +14,8 @@
   "license": "ISC",
   "dependencies": {
     "node-html-parser": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.4.1"
   }
 }
