@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.fileExists = exports.readFileSync = exports.readFile = exports.saveDataToFile = exports.readFilesInDir = exports.mkDir = void 0;
+exports.rmDir = exports.fileExists = exports.readFileSync = exports.readFile = exports.saveDataToFile = exports.readFilesInDir = exports.mkDir = void 0;
 var fs = require("fs");
 var path = require("path");
 var mkDir = function (path) {
@@ -51,3 +51,8 @@ var fileExists = function (filePath) {
     return false;
 };
 exports.fileExists = fileExists;
+var rmDir = function (dirPath, fn) {
+    fs.rmSync(dirPath, { recursive: true, force: true });
+    fn();
+};
+exports.rmDir = rmDir;

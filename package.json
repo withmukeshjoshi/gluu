@@ -1,7 +1,7 @@
 {
   "name": "gluu",
-  "version": "0.0.7",
-  "description": "gluu is a lightweight HTML Framework to write clean and structured html code",
+  "version": "0.0.8",
+  "description": "gluu is a lightweight HTML Framework to write clean and structured html",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "node-html-parser": "^4.1.0"
+    "node-html-parser": "^4.1.0",
+    "prettier": "^2.3.2"
   },
   "devDependencies": {
     "@types/node": "^16.4.1"

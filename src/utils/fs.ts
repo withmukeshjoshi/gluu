@@ -45,3 +45,7 @@ export const fileExists = (filePath: string) => {
   }
   return false;
 };
+export const rmDir = (dirPath: string, fn: () => void) => {
+  fs.rmSync(dirPath, { recursive: true, force: true });
+  fn();
+};

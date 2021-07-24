@@ -50,6 +50,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 exports.Gluu = void 0;
 var HTMLParser = require("node-html-parser");
+var prettier = require("prettier");
 var fs_1 = require("./utils/fs");
 var defaultConfig = {
     partialDirectory: "partials",
@@ -90,41 +91,49 @@ var Gluu = /** @class */ (function () {
         this.initialize = function () {
             if (_this.showLogs)
                 console.log("creating " + _this.config.output + " directory");
-            if (!fs_1.fileExists("./" + _this.config.output + "/")) {
+            if (fs_1.fileExists("./" + _this.config.output + "/")) {
+                fs_1.rmDir("./" + _this.config.output + "/", function () {
+                    fs_1.mkDir("./" + _this.config.output + "/");
+                });
+            }
+            else {
                 fs_1.mkDir("./" + _this.config.output + "/");
             }
         };
         this.saveFile = function (data, fileName) {
             if (_this.showLogs)
                 console.log("generating " + fileName);
-            fs_1.saveDataToFile(fileName, data);
+            var formattedData = prettier.format("" + data, {
+                semi: false,
+                parser: "html"
+            });
+            fs_1.saveDataToFile(fileName, formattedData);
         };
         this.processFile = function (fileName) {
             fs_1.readFile(fileName, function (data) {
                 var root = HTMLParser.parse(data);
                 var partials = root.querySelectorAll(_this.config.syntax);
-                partials.forEach(function (partial) {
+                if (partials.length === 0)
+                    return _this.saveFile(root, _this.config.output + "/" + fileName);
+                console.log(partials.length);
+                partials.forEach(function (partial, index) {
                     var partialName = partial.getAttribute("name");
-                    var newHTML = _this.readPartial("./" + _this.config.partialDirectory + "/" + partialName);
                     var attrs = partial.attributes;
                     var keys = Object.keys(attrs);
-                    Promise.resolve(newHTML).then(function (value) {
-                        var filteredData = "" + _this.filterPartialHTML(value);
-                        keys.forEach(function (key, index) {
-                            var reg = new RegExp("\\{\\b" + key + "\\b\\}");
-                            filteredData = filteredData.replace(reg, attrs[key]);
-                            filteredData = filteredData.replace("{content}", partial.innerHTML);
-                        });
-                        partial.insertAdjacentHTML("afterend", filteredData);
-                        partial.remove();
+                    var partialFileData = fs_1.readFileSync("./" + _this.config.partialDirectory + "/" + partialName);
+                    var filteredData = "" + _this.filterPartialHTML(partialFileData);
+                    keys.forEach(function (key) {
+                        var reg = new RegExp("\\{\\b" + key + "\\b\\}");
+                        filteredData = filteredData.replace(reg, attrs[key]);
+                        filteredData = filteredData.replace("{content}", partial.innerHTML);
                     });
-                    _this.saveFile(root, _this.config.output + "/" + fileName);
+                    partial.insertAdjacentHTML("afterend", filteredData);
+                    partial.remove();
+                    if (partials.length === index + 1) {
+                        _this.saveFile(root, _this.config.output + "/" + fileName);
+                    }
                 });
             });
-        };
-        this.readPartial = function (partialName) {
-            var html = fs_1.readFileSync(partialName);
-            return html;
         };
         this.filterPartialHTML = function (rawHtml) {
             var htmlTree = HTMLParser.parse(rawHtml);

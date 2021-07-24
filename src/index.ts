@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 var HTMLParser = require("node-html-parser");
+const prettier = require("prettier");
 import {
   fileExists,
   mkDir,
   readFile,
   readFilesInDir,
   readFileSync,
+  rmDir,
   saveDataToFile,
 } from "./utils/fs";
 
@@ -20,7 +22,7 @@ const defaultConfig = {
 export class Gluu {
   private config = { ...defaultConfig };
   private showLogs = false;
-  constructor(args) {
+  constructor(args: any) {
     if (args.includes("--logs") || args.includes("-l")) {
       this.showLogs = true;
       console.log("================");
@@ -54,46 +56,52 @@ export class Gluu {
   private initialize = () => {
     if (this.showLogs)
       console.log("creating " + this.config.output + " directory");
-    if (!fileExists("./" + this.config.output + "/")) {
+    if (fileExists("./" + this.config.output + "/")) {
+      rmDir("./" + this.config.output + "/", () => {
+        mkDir("./" + this.config.output + "/");
+      });
+    } else {
       mkDir("./" + this.config.output + "/");
     }
   };
 
   private saveFile = (data: any, fileName: string) => {
     if (this.showLogs) console.log("generating " + fileName);
-    saveDataToFile(fileName, data);
+    const formattedData = prettier.format("" + data, {
+      semi: false,
+      parser: "html",
+    });
+    saveDataToFile(fileName, formattedData);
   };
 
   private processFile = (fileName: string) => {
     readFile(fileName, (data) => {
       const root = HTMLParser.parse(data);
       const partials = root.querySelectorAll(this.config.syntax);
-      partials.forEach((partial: HTMLElement) => {
+      if (partials.length === 0)
+        return this.saveFile(root, this.config.output + "/" + fileName);
+      console.log(partials.length);
+      partials.forEach((partial: HTMLElement, index: number) => {
         const partialName = partial.getAttribute("name");
-        const newHTML = this.readPartial(
-          "./" + this.config.partialDirectory + "/" + partialName
-        );
         const attrs = partial.attributes;
         const keys = Object.keys(attrs);
-        Promise.resolve(newHTML).then((value) => {
-          var filteredData = "" + this.filterPartialHTML(value);
-          keys.forEach((key, index) => {
-            var reg = new RegExp("\\{\\b" + key + "\\b\\}");
-            filteredData = filteredData.replace(reg, attrs[key]);
-            filteredData = filteredData.replace("{content}", partial.innerHTML);
-          });
-          partial.insertAdjacentHTML("afterend", filteredData);
-          partial.remove();
-        });
+        const partialFileData = readFileSync(
+          "./" + this.config.partialDirectory + "/" + partialName
+        );
+        let filteredData = "" + this.filterPartialHTML(partialFileData);
+        keys.forEach((key) => {
+          let reg = new RegExp("\\{\\b" + key + "\\b\\}");
 
-        this.saveFile(root, this.config.output + "/" + fileName);
+          filteredData = filteredData.replace(reg, attrs[key]);
+          filteredData = filteredData.replace("{content}", partial.innerHTML);
+        });
+        partial.insertAdjacentHTML("afterend", filteredData);
+        partial.remove();
+        if (partials.length === index + 1) {
+          this.saveFile(root, this.config.output + "/" + fileName);
+        }
       });
     });
-  };
-
-  private readPartial = (partialName: string) => {
-    var html = readFileSync(partialName);
-    return html;
   };
 
   private filterPartialHTML = (rawHtml: string) => {

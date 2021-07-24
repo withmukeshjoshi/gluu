@@ -74,6 +74,7 @@ to prevent the duplicate code added to the complied html, use ignore tag.
 
 - [x] pass content to partial
 - [x] Process multiple files
+- [x] Prettify outfile files
 - [ ] add content to head/footer from the partial
 
 ### For feedback and query, please write to admin@iammukesh.com
