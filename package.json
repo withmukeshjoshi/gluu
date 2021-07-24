@@ -1,6 +1,6 @@
 {
   "name": "gluu",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "gluu is a lightweight HTML Framework to write clean and structured html code",
   "main": "index.js",
   "scripts": {
