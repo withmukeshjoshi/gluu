@@ -1,17 +1,26 @@
 {
   "name": "gluu",
-  "version": "0.0.8",
+  "version": "0.0.11",
   "description": "gluu is a lightweight HTML Framework to write clean and structured html",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "homepage": "https://iammukesh.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orangepreneur/gluu.git"
+  },
   "bin": {
     "gluu": "./gluu.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name": "Mukesh Joshi",
+    "email": "admin@iammukesh.com",
+    "url": "https://iammukesh.com/"
+  },
+  "license": "MIT",
   "dependencies": {
     "glob": "^7.1.7",
     "node-html-parser": "^4.1.0",
