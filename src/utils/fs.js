@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.rmDir = exports.fileExists = exports.readFileSync = exports.readFile = exports.saveDataToFile = exports.readFilesInDir = exports.mkDir = void 0;
+exports.rmDir = exports.fileExists = exports.readFileSync = exports.readFile = exports.checkDirectory = exports.saveDataToFile = exports.mkDir = void 0;
 var fs = require("fs");
 var path = require("path");
 var mkDir = function (path) {
@@ -12,12 +12,6 @@ var mkDir = function (path) {
     });
 };
 exports.mkDir = mkDir;
-var readFilesInDir = function (dirPath, ext) {
-    var fileArray = fs.readdirSync(dirPath);
-    var filteredArray = fileArray.filter(function (item) { return path.extname(item) === ext; });
-    return filteredArray;
-};
-exports.readFilesInDir = readFilesInDir;
 var saveDataToFile = function (fileName, data) {
     try {
         var stream = fs.createWriteStream("./" + fileName);
@@ -31,6 +25,13 @@ var saveDataToFile = function (fileName, data) {
     }
 };
 exports.saveDataToFile = saveDataToFile;
+var checkDirectory = function (filePath) {
+    var dir = path.parse(filePath).dir;
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+};
+exports.checkDirectory = checkDirectory;
 var readFile = function (fileName, fn) {
     fs.readFile(fileName, "utf8", function (err, data) {
         if (err) {

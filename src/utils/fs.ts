@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import * as path from "path";
+const path = require("path");
 export const mkDir = (path: string) => {
   fs.mkdir(path, (err) => {
     if (err) {
@@ -9,13 +9,7 @@ export const mkDir = (path: string) => {
   });
 };
 
-export const readFilesInDir = (dirPath: string, ext: string): string[] => {
-  const fileArray = fs.readdirSync(dirPath);
-  const filteredArray = fileArray.filter((item) => path.extname(item) === ext);
-  return filteredArray;
-};
-
-export const saveDataToFile = (fileName, data) => {
+export const saveDataToFile = (fileName: string, data: any) => {
   try {
     var stream = fs.createWriteStream("./" + fileName);
     stream.once("open", function (fd) {
@@ -26,8 +20,13 @@ export const saveDataToFile = (fileName, data) => {
     console.log(err);
   }
 };
-
-export const readFile = (fileName, fn: (data: string) => void) => {
+export const checkDirectory = (filePath: string) => {
+  const dir = path.parse(filePath).dir;
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+};
+export const readFile = (fileName: string, fn: (data: string) => void) => {
   fs.readFile(fileName, "utf8", (err, data) => {
     if (err) {
       return console.log(err);
@@ -35,6 +34,7 @@ export const readFile = (fileName, fn: (data: string) => void) => {
     fn(data);
   });
 };
+
 export const readFileSync = (partialName: string) => {
   return fs.readFileSync(partialName).toString();
 };

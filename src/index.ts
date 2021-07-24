@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 var HTMLParser = require("node-html-parser");
 const prettier = require("prettier");
+var glob = require("glob");
 import {
+  checkDirectory,
   fileExists,
   mkDir,
-  readFile,
-  readFilesInDir,
   readFileSync,
   rmDir,
   saveDataToFile,
@@ -17,11 +17,13 @@ const defaultConfig = {
   output: "dist",
   ext: ".html",
   src: ".",
+  pretty: false,
 };
 
 export class Gluu {
   private config = { ...defaultConfig };
   private showLogs = false;
+  private prettify = true;
   constructor(args: any) {
     if (args.includes("--logs") || args.includes("-l")) {
       this.showLogs = true;
@@ -29,24 +31,31 @@ export class Gluu {
       console.log("Debug Mode Enabled");
       console.log("================");
     }
+
     this.initialize();
     if (args.includes("init")) {
       this.createConfigFile();
     } else {
       this.readConfigFile();
+      if (args.includes("--pretty=false") || this.config.pretty == false) {
+        this.prettify = false;
+      }
       this.readEntryDir(this.config.src);
     }
   }
 
-  private readEntryDir = async (path: string) => {
-    const files = await readFilesInDir(path, this.config.ext);
-    files.forEach((file) => this.processFile(file));
+  private readEntryDir = (path: string) => {
+    glob(path + "/**/*" + this.config.ext, (er: any, files: string[]) => {
+      if (er) {
+        return console.log(er);
+      }
+      files.forEach((file) => this.processFile(file));
+    });
   };
   private readConfigFile = () => {
     if (fileExists("./gluu.config.json")) {
-      readFile("./gluu.config.json", (data) => {
-        this.config = { ...JSON.parse(data) };
-      });
+      const data = readFileSync("./gluu.config.json");
+      this.config = { ...JSON.parse(data) };
     } else {
       if (this.showLogs)
         console.log("cannot read: gluu.config.json doesn't exists.");
@@ -71,36 +80,36 @@ export class Gluu {
       semi: false,
       parser: "html",
     });
-    saveDataToFile(fileName, formattedData);
+    fileName = fileName.replace(this.config.src + "/", "");
+    checkDirectory(fileName);
+    saveDataToFile(fileName, this.prettify ? formattedData : data);
   };
 
   private processFile = (fileName: string) => {
-    readFile(fileName, (data) => {
-      const root = HTMLParser.parse(data);
-      const partials = root.querySelectorAll(this.config.syntax);
-      if (partials.length === 0)
-        return this.saveFile(root, this.config.output + "/" + fileName);
-      console.log(partials.length);
-      partials.forEach((partial: HTMLElement, index: number) => {
-        const partialName = partial.getAttribute("name");
-        const attrs = partial.attributes;
-        const keys = Object.keys(attrs);
-        const partialFileData = readFileSync(
-          "./" + this.config.partialDirectory + "/" + partialName
-        );
-        let filteredData = "" + this.filterPartialHTML(partialFileData);
-        keys.forEach((key) => {
-          let reg = new RegExp("\\{\\b" + key + "\\b\\}");
+    const data = readFileSync(fileName);
+    const root = HTMLParser.parse(data);
+    const partials = root.querySelectorAll(this.config.syntax);
+    if (partials.length === 0)
+      return this.saveFile(root, this.config.output + "/" + fileName);
+    partials.forEach((partial: HTMLElement, index: number) => {
+      const partialName = partial.getAttribute("name");
+      const attrs = partial.attributes;
+      const keys = Object.keys(attrs);
+      const partialFileData = readFileSync(
+        "./" + this.config.partialDirectory + "/" + partialName
+      );
+      let filteredData = "" + this.filterPartialHTML(partialFileData);
+      keys.forEach((key) => {
+        let reg = new RegExp("\\{\\b" + key + "\\b\\}");
 
-          filteredData = filteredData.replace(reg, attrs[key]);
-          filteredData = filteredData.replace("{content}", partial.innerHTML);
-        });
-        partial.insertAdjacentHTML("afterend", filteredData);
-        partial.remove();
-        if (partials.length === index + 1) {
-          this.saveFile(root, this.config.output + "/" + fileName);
-        }
+        filteredData = filteredData.replace(reg, attrs[key]);
+        filteredData = filteredData.replace("{content}", partial.innerHTML);
       });
+      partial.insertAdjacentHTML("afterend", filteredData);
+      partial.remove();
+      if (partials.length === index + 1) {
+        this.saveFile(root, this.config.output + "/" + fileName);
+      }
     });
   };
 
