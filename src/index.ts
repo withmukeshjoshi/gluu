@@ -1,99 +1,102 @@
 #!/usr/bin/env node
 var HTMLParser = require("node-html-parser");
-import * as fs from "fs";
+import {
+  fileExists,
+  mkDir,
+  readFile,
+  readFilesInDir,
+  readFileSync,
+  saveDataToFile,
+} from "./utils/fs";
 
 const defaultConfig = {
   partialDirectory: "partials",
   syntax: "partial",
   output: "dist",
-  entry: "index.html",
+  ext: ".html",
+  src: ".",
 };
 
 export class Gluu {
   private config = { ...defaultConfig };
+  private showLogs = false;
   constructor(args) {
+    if (args.includes("--logs") || args.includes("-l")) {
+      this.showLogs = true;
+      console.log("================");
+      console.log("Debug Mode Enabled");
+      console.log("================");
+    }
+    this.initialize();
     if (args.includes("init")) {
       this.createConfigFile();
-      this.initialize();
     } else {
       this.readConfigFile();
+      this.readEntryDir(this.config.src);
     }
   }
 
+  private readEntryDir = async (path: string) => {
+    const files = await readFilesInDir(path, this.config.ext);
+    files.forEach((file) => this.processFile(file));
+  };
   private readConfigFile = () => {
-    if (fs.existsSync("./gluu.config.json")) {
-      fs.readFile("./gluu.config.json", "utf8", (err, data) => {
-        if (err) {
-          console.log(err);
-          return err;
-        }
+    if (fileExists("./gluu.config.json")) {
+      readFile("./gluu.config.json", (data) => {
         this.config = { ...JSON.parse(data) };
-        this.processFile(this.config.entry);
       });
+    } else {
+      if (this.showLogs)
+        console.log("cannot read: gluu.config.json doesn't exists.");
     }
   };
 
   private initialize = () => {
-    if (fs.existsSync("./" + this.config.output + "/")) {
-      fs.rmdirSync("./" + this.config.output + "/", { recursive: true });
+    if (this.showLogs)
+      console.log("creating " + this.config.output + " directory");
+    if (!fileExists("./" + this.config.output + "/")) {
+      mkDir("./" + this.config.output + "/");
     }
-    fs.mkdir("./" + this.config.output + "/", (err) => {
-      if (err) {
-        return console.error(err);
-      }
-    });
   };
 
-  private saveFile = (data, fileName) => {
-    this.initialize();
-    var stream = fs.createWriteStream("./" + fileName);
-    stream.once("open", function (fd) {
-      var html = "" + data;
-      stream.end(html);
-    });
+  private saveFile = (data: any, fileName: string) => {
+    if (this.showLogs) console.log("generating " + fileName);
+    saveDataToFile(fileName, data);
   };
 
-  private processFile = (fileName) => {
-    if (fileName == "") return console.log("Entry point file is required.");
-    if (fs.existsSync(fileName)) {
-      fs.readFile(fileName, "utf8", (err, data) => {
-        if (err) {
-          return console.log(err);
-        }
-        const root = HTMLParser.parse(data);
-        const partials = root.querySelectorAll(this.config.syntax);
-        partials.forEach((partial) => {
-          const partialName = partial.getAttribute("name");
-          const newHTML = this.readPartial(
-            "./" + this.config.partialDirectory + "/" + partialName
-          );
-          const attrs = partial.rawAttributes;
-          const keys = Object.keys(attrs);
-          Promise.resolve(newHTML).then((value) => {
-            var filteredData = "" + this.filterPartialHTML(value);
-            keys.forEach((key, index) => {
-              var reg = new RegExp("\\{\\b" + key + "\\b\\}");
-              filteredData = filteredData.replace(reg, attrs[key]);
-            });
-            partial.insertAdjacentHTML("afterend", filteredData);
-            partial.remove();
+  private processFile = (fileName: string) => {
+    readFile(fileName, (data) => {
+      const root = HTMLParser.parse(data);
+      const partials = root.querySelectorAll(this.config.syntax);
+      partials.forEach((partial: HTMLElement) => {
+        const partialName = partial.getAttribute("name");
+        const newHTML = this.readPartial(
+          "./" + this.config.partialDirectory + "/" + partialName
+        );
+        const attrs = partial.attributes;
+        const keys = Object.keys(attrs);
+        Promise.resolve(newHTML).then((value) => {
+          var filteredData = "" + this.filterPartialHTML(value);
+          keys.forEach((key, index) => {
+            var reg = new RegExp("\\{\\b" + key + "\\b\\}");
+            filteredData = filteredData.replace(reg, attrs[key]);
+            filteredData = filteredData.replace("{content}", partial.innerHTML);
           });
-          this.saveFile(root, this.config.output + "/" + fileName);
+          partial.insertAdjacentHTML("afterend", filteredData);
+          partial.remove();
         });
+
+        this.saveFile(root, this.config.output + "/" + fileName);
       });
-    } else {
-      console.log(
-        `Entry file not found. Project must have a \"${this.config.entry}\" file`
-      );
-    }
+    });
   };
 
-  private readPartial = (partialName) => {
-    var html = fs.readFileSync(partialName).toString();
+  private readPartial = (partialName: string) => {
+    var html = readFileSync(partialName);
     return html;
   };
 
-  private filterPartialHTML = (rawHtml) => {
+  private filterPartialHTML = (rawHtml: string) => {
     const htmlTree = HTMLParser.parse(rawHtml);
     htmlTree.querySelectorAll("ignore").forEach((element) => {
       element.remove();
@@ -102,15 +105,11 @@ export class Gluu {
   };
 
   private createConfigFile = () => {
-    if (!fs.existsSync("./gluu.config.json")) {
+    if (!fileExists("./gluu.config.json")) {
       this.saveFile(JSON.stringify(this.config), "gluu.config.json");
     }
-    if (!fs.existsSync(this.config.partialDirectory)) {
-      fs.mkdir("./" + this.config.partialDirectory + "/", (err) => {
-        if (err) {
-          return console.error(err);
-        }
-      });
+    if (!fileExists(this.config.partialDirectory)) {
+      mkDir("./" + this.config.partialDirectory + "/");
     }
   };
 }
