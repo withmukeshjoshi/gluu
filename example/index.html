@@ -9,13 +9,12 @@
 </head>
 
 <body>
-    <!-- Basic Example of Implementing Partials -->
-    <partial heading="I am a heading" name="demo.html" />
-    <partial heading="I am a heading" name="demo.html" />
-    <partial heading="I am a heading" name="demo.html" />
-    <partial heading="I am a heading" name="demo.html" />
-    <partial heading="I am a heading" name="demo.html" />
-    
+    <partial heading="I am a heading" name="demo.html">
+        <partial heading="I am a nested heading" name="demo.html" />
+    </partial>
+    <partial heading="I am a heading" name="demo.html">
+        <partial heading="I am the nested paragraph" name="demo2.html" />
+    </partial>
 </body>
 
 </html>

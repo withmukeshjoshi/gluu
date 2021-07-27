@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.rmDir = exports.fileExists = exports.readFileSync = exports.readFile = exports.isDirectory = exports.checkDirectory = exports.saveDataToFile = exports.mkDir = void 0;
+exports.rmDir = exports.fileExists = exports.readFileSync = exports.readFile = exports.isDirectory = exports.checkDirectory = exports.saveDataToFile = exports.copyFile = exports.mkDir = void 0;
 var fs = require("fs");
 var path = require("path");
 var mkDir = function (path) {
@@ -12,6 +12,10 @@ var mkDir = function (path) {
     });
 };
 exports.mkDir = mkDir;
+var copyFile = function (src, dist) {
+    fs.copyFileSync(src, dist);
+};
+exports.copyFile = copyFile;
 var saveDataToFile = function (fileName, data) {
     try {
         var stream = fs.createWriteStream("./" + fileName);

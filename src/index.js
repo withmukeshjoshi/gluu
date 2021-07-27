@@ -20,12 +20,19 @@ var defaultConfig = {
     partialDirectory: "partials",
     syntax: "partial",
     output: "dist",
+    ext: ".html",
     src: "."
 };
 var Gluu = /** @class */ (function () {
     function Gluu(args) {
         var _this = this;
-        this.config = __assign({}, defaultConfig);
+        this.config = {
+            partialDirectory: "partials",
+            syntax: "partial",
+            output: "dist",
+            ext: ".html",
+            src: "."
+        };
         this.showLogs = false;
         this.readEntryDir = function (path) {
             glob(path + "/**/*", function (er, files) {
@@ -39,10 +46,14 @@ var Gluu = /** @class */ (function () {
                         return false;
                     if (fs_1.isDirectory(file))
                         return false;
+                    if (!file.includes(_this.config.ext)) {
+                        if (_this.showLogs)
+                            console.log("Copying file " + file);
+                        fs_1.checkDirectory(_this.config.output + "/" + file.replace(_this.config.src + "/", ""));
+                        return fs_1.copyFile(file, _this.config.output + "/" + file.replace(_this.config.src + "/", ""));
+                    }
                     return _this.processFile(file);
                 });
-                if (_this.showLogs)
-                    console.log("Copying static files to dist...");
             });
         };
         this.readConfigFile = function () {
@@ -69,12 +80,6 @@ var Gluu = /** @class */ (function () {
         };
         this.saveFile = function (data, fileName, fileOnly) {
             if (fileOnly === void 0) { fileOnly = false; }
-            if (_this.showLogs)
-                console.log("generating " + fileName);
-            // const formattedData = prettier.format("" + data, {
-            //   semi: false,
-            //   parser: "html",
-            // });
             fileName = fileName.replace(_this.config.src + "/", "");
             if (!fileOnly) {
                 fs_1.checkDirectory(fileName, _this.showLogs);
@@ -86,8 +91,23 @@ var Gluu = /** @class */ (function () {
             var data = fs_1.readFileSync(fileName);
             var root = HTMLParser.parse(data);
             var partials = root.querySelectorAll(_this.config.syntax);
-            if (partials.length === 0)
-                return _this.saveFile(root, _this.config.output + "/" + fileName);
+            if (partials.length === 0) {
+                _this.skipFile(fileName);
+            }
+            _this.checkNestedPartial(root, fileName);
+        };
+        this.skipFile = function (fileName) {
+            if (_this.showLogs)
+                console.log("Copying " + fileName);
+            fs_1.checkDirectory(_this.config.output + "/" + fileName.replace(_this.config.src + "/", ""));
+            return fs_1.copyFile(fileName, _this.config.output + "/" + fileName.replace(_this.config.src + "/", ""));
+        };
+        this.checkNestedPartial = function (rawHTML, fileName) {
+            var root = rawHTML;
+            var partials = root.querySelectorAll(_this.config.syntax);
+            if (partials.length === 0) {
+                _this.saveFile(root, _this.config.output + "/" + fileName);
+            }
             partials.forEach(function (partial, index) {
                 var partialName = partial.getAttribute("name");
                 var attrs = partial.attributes;
@@ -95,14 +115,14 @@ var Gluu = /** @class */ (function () {
                 var partialFileData = fs_1.readFileSync("./" + _this.config.partialDirectory + "/" + partialName);
                 var filteredData = "" + _this.filterPartialHTML(partialFileData);
                 keys.forEach(function (key) {
-                    var reg = new RegExp("\\{\\b" + key + "\\b\\}");
+                    var reg = new RegExp("\\{\\b" + key + "\\b\\}", "g");
                     filteredData = filteredData.replace(reg, attrs[key]);
                     filteredData = filteredData.replace("{content}", partial.innerHTML);
                 });
                 partial.insertAdjacentHTML("afterend", filteredData);
                 partial.remove();
                 if (partials.length === index + 1) {
-                    _this.saveFile(root, _this.config.output + "/" + fileName);
+                    _this.checkNestedPartial(root, fileName);
                 }
             });
         };
@@ -121,6 +141,7 @@ var Gluu = /** @class */ (function () {
                 fs_1.mkDir("./" + _this.config.partialDirectory + "/");
             }
         };
+        this.config = __assign({}, defaultConfig);
         if (args.includes("--logs") || args.includes("-l")) {
             this.showLogs = true;
             console.log("================");

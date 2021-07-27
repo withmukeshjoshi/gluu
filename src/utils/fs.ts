@@ -8,7 +8,9 @@ export const mkDir = (path: string) => {
     }
   });
 };
-
+export const copyFile = (src: string, dist: string) => {
+  fs.copyFileSync(src, dist);
+};
 export const saveDataToFile = (fileName: string, data: any) => {
   try {
     var stream = fs.createWriteStream("./" + fileName);

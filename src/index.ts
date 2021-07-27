@@ -3,6 +3,7 @@ var HTMLParser = require("node-html-parser");
 var glob = require("glob");
 import {
   checkDirectory,
+  copyFile,
   fileExists,
   isDirectory,
   mkDir,
@@ -15,13 +16,21 @@ const defaultConfig = {
   partialDirectory: "partials",
   syntax: "partial",
   output: "dist",
+  ext: ".html",
   src: ".",
 };
 
 export class Gluu {
-  private config = { ...defaultConfig };
+  private config = {
+    partialDirectory: "partials",
+    syntax: "partial",
+    output: "dist",
+    ext: ".html",
+    src: ".",
+  };
   private showLogs = false;
   constructor(args: any) {
+    this.config = { ...defaultConfig };
     if (args.includes("--logs") || args.includes("-l")) {
       this.showLogs = true;
       console.log("================");
@@ -47,9 +56,18 @@ export class Gluu {
         if (file.match("/" + this.config.partialDirectory + "/")) return false;
         if (file.match("/node_modules/")) return false;
         if (isDirectory(file)) return false;
+        if (!file.includes(this.config.ext)) {
+          if (this.showLogs) console.log("Copying file " + file);
+          checkDirectory(
+            this.config.output + "/" + file.replace(this.config.src + "/", "")
+          );
+          return copyFile(
+            file,
+            this.config.output + "/" + file.replace(this.config.src + "/", "")
+          );
+        }
         return this.processFile(file);
       });
-      if (this.showLogs) console.log("Copying static files to dist...");
     });
   };
   private readConfigFile = () => {
@@ -75,11 +93,6 @@ export class Gluu {
   };
 
   private saveFile = (data: any, fileName: string, fileOnly = false) => {
-    if (this.showLogs) console.log("generating " + fileName);
-    // const formattedData = prettier.format("" + data, {
-    //   semi: false,
-    //   parser: "html",
-    // });
     fileName = fileName.replace(this.config.src + "/", "");
     if (!fileOnly) {
       checkDirectory(fileName, this.showLogs);
@@ -92,8 +105,29 @@ export class Gluu {
     const data = readFileSync(fileName);
     const root = HTMLParser.parse(data);
     const partials = root.querySelectorAll(this.config.syntax);
-    if (partials.length === 0)
-      return this.saveFile(root, this.config.output + "/" + fileName);
+    if (partials.length === 0) {
+      this.skipFile(fileName);
+    }
+    this.checkNestedPartial(root, fileName);
+  };
+
+  private skipFile = (fileName: string) => {
+    if (this.showLogs) console.log("Copying " + fileName);
+    checkDirectory(
+      this.config.output + "/" + fileName.replace(this.config.src + "/", "")
+    );
+    return copyFile(
+      fileName,
+      this.config.output + "/" + fileName.replace(this.config.src + "/", "")
+    );
+  };
+
+  private checkNestedPartial = (rawHTML: any, fileName: string) => {
+    const root = rawHTML;
+    const partials = root.querySelectorAll(this.config.syntax);
+    if (partials.length === 0) {
+      this.saveFile(root, this.config.output + "/" + fileName);
+    }
     partials.forEach((partial: HTMLElement, index: number) => {
       const partialName = partial.getAttribute("name");
       const attrs = partial.attributes;
@@ -103,15 +137,14 @@ export class Gluu {
       );
       let filteredData = "" + this.filterPartialHTML(partialFileData);
       keys.forEach((key) => {
-        let reg = new RegExp("\\{\\b" + key + "\\b\\}");
-
+        let reg = new RegExp("\\{\\b" + key + "\\b\\}", "g");
         filteredData = filteredData.replace(reg, attrs[key]);
         filteredData = filteredData.replace("{content}", partial.innerHTML);
       });
       partial.insertAdjacentHTML("afterend", filteredData);
       partial.remove();
       if (partials.length === index + 1) {
-        this.saveFile(root, this.config.output + "/" + fileName);
+        this.checkNestedPartial(root, fileName);
       }
     });
   };
