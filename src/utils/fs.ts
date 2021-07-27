@@ -20,13 +20,16 @@ export const saveDataToFile = (fileName: string, data: any) => {
     console.log(err);
   }
 };
-export const checkDirectory = (filePath: string) => {
+export const checkDirectory = (filePath: string, showLogs = false) => {
   const dir = path.parse(filePath).dir;
-  console.log("checking for " + filePath);
+  if (showLogs) console.log("checking for " + filePath);
   if (!fs.existsSync(dir)) {
-    console.log("Creating" + dir);
+    if (showLogs) console.log("Creating" + dir);
     fs.mkdirSync(dir, { recursive: true });
   }
+};
+export const isDirectory = (path: string) => {
+  return fs.lstatSync(path).isDirectory();
 };
 export const readFile = (fileName: string, fn: (data: string) => void) => {
   fs.readFile(fileName, "utf8", (err, data) => {

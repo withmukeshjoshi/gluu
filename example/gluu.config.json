@@ -2,7 +2,5 @@
   "partialDirectory": "partials",
   "syntax": "partial",
   "output": "dist",
-  "ext": ".html",
-  "src": ".",
-  "pretty": false
+  "src": "."
 }

@@ -14,35 +14,35 @@ var __assign = (this && this.__assign) || function () {
 exports.__esModule = true;
 exports.Gluu = void 0;
 var HTMLParser = require("node-html-parser");
-var prettier = require("prettier");
 var glob = require("glob");
 var fs_1 = require("./utils/fs");
 var defaultConfig = {
     partialDirectory: "partials",
     syntax: "partial",
     output: "dist",
-    ext: ".html",
-    src: ".",
-    pretty: false
+    src: "."
 };
 var Gluu = /** @class */ (function () {
     function Gluu(args) {
         var _this = this;
         this.config = __assign({}, defaultConfig);
         this.showLogs = false;
-        this.prettify = true;
         this.readEntryDir = function (path) {
-            glob(path + "/**/*" + _this.config.ext, function (er, files) {
+            glob(path + "/**/*", function (er, files) {
                 if (er) {
                     return console.log(er);
                 }
-                console.log(files);
                 files.forEach(function (file) {
-                    console.log(file);
                     if (file.match("/" + _this.config.partialDirectory + "/"))
+                        return false;
+                    if (file.match("/node_modules/"))
+                        return false;
+                    if (fs_1.isDirectory(file))
                         return false;
                     return _this.processFile(file);
                 });
+                if (_this.showLogs)
+                    console.log("Copying static files to dist...");
             });
         };
         this.readConfigFile = function () {
@@ -71,15 +71,16 @@ var Gluu = /** @class */ (function () {
             if (fileOnly === void 0) { fileOnly = false; }
             if (_this.showLogs)
                 console.log("generating " + fileName);
-            var formattedData = prettier.format("" + data, {
-                semi: false,
-                parser: "html"
-            });
+            // const formattedData = prettier.format("" + data, {
+            //   semi: false,
+            //   parser: "html",
+            // });
             fileName = fileName.replace(_this.config.src + "/", "");
             if (!fileOnly) {
-                fs_1.checkDirectory(fileName);
+                fs_1.checkDirectory(fileName, _this.showLogs);
             }
-            fs_1.saveDataToFile(fileName, _this.prettify ? formattedData : data);
+            1;
+            fs_1.saveDataToFile(fileName, data);
         };
         this.processFile = function (fileName) {
             var data = fs_1.readFileSync(fileName);
@@ -132,9 +133,6 @@ var Gluu = /** @class */ (function () {
         }
         else {
             this.readConfigFile();
-            if (args.includes("--pretty=false") || this.config.pretty == false) {
-                this.prettify = false;
-            }
             this.readEntryDir(this.config.src);
         }
     }

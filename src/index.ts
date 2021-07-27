@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 var HTMLParser = require("node-html-parser");
-const prettier = require("prettier");
 var glob = require("glob");
 import {
   checkDirectory,
   fileExists,
+  isDirectory,
   mkDir,
   readFileSync,
   rmDir,
@@ -15,15 +15,12 @@ const defaultConfig = {
   partialDirectory: "partials",
   syntax: "partial",
   output: "dist",
-  ext: ".html",
   src: ".",
-  pretty: false,
 };
 
 export class Gluu {
   private config = { ...defaultConfig };
   private showLogs = false;
-  private prettify = true;
   constructor(args: any) {
     if (args.includes("--logs") || args.includes("-l")) {
       this.showLogs = true;
@@ -37,22 +34,22 @@ export class Gluu {
       this.createConfigFile();
     } else {
       this.readConfigFile();
-      if (args.includes("--pretty=false") || this.config.pretty == false) {
-        this.prettify = false;
-      }
       this.readEntryDir(this.config.src);
     }
   }
 
   private readEntryDir = (path: string) => {
-    glob(path + "/**/*" + this.config.ext, (er: any, files: string[]) => {
+    glob(path + "/**/*", (er: any, files: string[]) => {
       if (er) {
         return console.log(er);
       }
       files.forEach((file) => {
         if (file.match("/" + this.config.partialDirectory + "/")) return false;
+        if (file.match("/node_modules/")) return false;
+        if (isDirectory(file)) return false;
         return this.processFile(file);
       });
+      if (this.showLogs) console.log("Copying static files to dist...");
     });
   };
   private readConfigFile = () => {
@@ -79,15 +76,16 @@ export class Gluu {
 
   private saveFile = (data: any, fileName: string, fileOnly = false) => {
     if (this.showLogs) console.log("generating " + fileName);
-    const formattedData = prettier.format("" + data, {
-      semi: false,
-      parser: "html",
-    });
+    // const formattedData = prettier.format("" + data, {
+    //   semi: false,
+    //   parser: "html",
+    // });
     fileName = fileName.replace(this.config.src + "/", "");
     if (!fileOnly) {
-      checkDirectory(fileName);
+      checkDirectory(fileName, this.showLogs);
     }
-    saveDataToFile(fileName, this.prettify ? formattedData : data);
+    1;
+    saveDataToFile(fileName, data);
   };
 
   private processFile = (fileName: string) => {
