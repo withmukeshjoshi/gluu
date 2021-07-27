@@ -27,7 +27,9 @@ var saveDataToFile = function (fileName, data) {
 exports.saveDataToFile = saveDataToFile;
 var checkDirectory = function (filePath) {
     var dir = path.parse(filePath).dir;
+    console.log("checking for " + filePath);
     if (!fs.existsSync(dir)) {
+        console.log("Creating" + dir);
         fs.mkdirSync(dir, { recursive: true });
     }
 };

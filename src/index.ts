@@ -49,7 +49,10 @@ export class Gluu {
       if (er) {
         return console.log(er);
       }
-      files.forEach((file) => this.processFile(file));
+      files.forEach((file) => {
+        if (file.match("/" + this.config.partialDirectory + "/")) return false;
+        return this.processFile(file);
+      });
     });
   };
   private readConfigFile = () => {
@@ -74,14 +77,16 @@ export class Gluu {
     }
   };
 
-  private saveFile = (data: any, fileName: string) => {
+  private saveFile = (data: any, fileName: string, fileOnly = false) => {
     if (this.showLogs) console.log("generating " + fileName);
     const formattedData = prettier.format("" + data, {
       semi: false,
       parser: "html",
     });
     fileName = fileName.replace(this.config.src + "/", "");
-    checkDirectory(fileName);
+    if (!fileOnly) {
+      checkDirectory(fileName);
+    }
     saveDataToFile(fileName, this.prettify ? formattedData : data);
   };
 
@@ -123,7 +128,7 @@ export class Gluu {
 
   private createConfigFile = () => {
     if (!fileExists("./gluu.config.json")) {
-      this.saveFile(JSON.stringify(this.config), "gluu.config.json");
+      this.saveFile(JSON.stringify(this.config), "gluu.config.json", true);
     }
     if (!fileExists(this.config.partialDirectory)) {
       mkDir("./" + this.config.partialDirectory + "/");

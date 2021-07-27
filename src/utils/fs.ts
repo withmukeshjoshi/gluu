@@ -22,7 +22,9 @@ export const saveDataToFile = (fileName: string, data: any) => {
 };
 export const checkDirectory = (filePath: string) => {
   const dir = path.parse(filePath).dir;
+  console.log("checking for " + filePath);
   if (!fs.existsSync(dir)) {
+    console.log("Creating" + dir);
     fs.mkdirSync(dir, { recursive: true });
   }
 };

@@ -36,7 +36,13 @@ var Gluu = /** @class */ (function () {
                 if (er) {
                     return console.log(er);
                 }
-                files.forEach(function (file) { return _this.processFile(file); });
+                console.log(files);
+                files.forEach(function (file) {
+                    console.log(file);
+                    if (file.match("/" + _this.config.partialDirectory + "/"))
+                        return false;
+                    return _this.processFile(file);
+                });
             });
         };
         this.readConfigFile = function () {
@@ -61,7 +67,8 @@ var Gluu = /** @class */ (function () {
                 fs_1.mkDir("./" + _this.config.output + "/");
             }
         };
-        this.saveFile = function (data, fileName) {
+        this.saveFile = function (data, fileName, fileOnly) {
+            if (fileOnly === void 0) { fileOnly = false; }
             if (_this.showLogs)
                 console.log("generating " + fileName);
             var formattedData = prettier.format("" + data, {
@@ -69,7 +76,9 @@ var Gluu = /** @class */ (function () {
                 parser: "html"
             });
             fileName = fileName.replace(_this.config.src + "/", "");
-            fs_1.checkDirectory(fileName);
+            if (!fileOnly) {
+                fs_1.checkDirectory(fileName);
+            }
             fs_1.saveDataToFile(fileName, _this.prettify ? formattedData : data);
         };
         this.processFile = function (fileName) {
@@ -105,7 +114,7 @@ var Gluu = /** @class */ (function () {
         };
         this.createConfigFile = function () {
             if (!fs_1.fileExists("./gluu.config.json")) {
-                _this.saveFile(JSON.stringify(_this.config), "gluu.config.json");
+                _this.saveFile(JSON.stringify(_this.config), "gluu.config.json", true);
             }
             if (!fs_1.fileExists(_this.config.partialDirectory)) {
                 fs_1.mkDir("./" + _this.config.partialDirectory + "/");
